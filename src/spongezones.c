@@ -1,9 +1,9 @@
-/* T. Horstmann
-* Department of Aeroacoustics
-* ONERA
-* Chatillon
-* France
-*/
+ /* T. Horstmann
+    AT-TRA
+    Deutsches Zentrum für Luft- und Raumfahrt (DLR)
+    Berlin
+	Germany
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

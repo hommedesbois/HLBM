@@ -1,10 +1,10 @@
- /* G. Wellein
- * HPC Services
- * Regionales Rechenzentrum Erlangen
- * Friedrich-Alexander-University Erlangen-Nuremberg
- * Germany
- *
+ /* T. Horstmann
+    AT-TRA
+    Deutsches Zentrum für Luft- und Raumfahrt (DLR)
+    Berlin
+	Germany
  */
+
 #include <stdio.h>
 #include "ludwig.h"
 
