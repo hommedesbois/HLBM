@@ -42,14 +42,14 @@ extern "C" void DumpMacroNS(double **macro, int index){
 
 
 	output_file << "CELL_DATA " << xMax_NS * yMax_NS << endl;
-	output_file << "SCALARS density float 1 \n";
+	output_file << "SCALARS pressure float 1 \n";
 	output_file << "LOOKUP_TABLE default\n";
 
 		for(int Y=1; Y<=yMax_NS; Y++)
 			for(int X=1; X<= xMax_NS; X++){
 
 				int idx = off + IDM_NS(X,Y);
-				output_file << (macro[idx][0] - rho0) << endl;
+				output_file << (macro[idx][0] - rho0)*Csound*Csound/1.4 << endl;
 			}
     output_file << "SCALARS velocity float 3 \n";
 	output_file << "LOOKUP_TABLE default\n";

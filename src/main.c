@@ -25,6 +25,17 @@ const int ey[NPOP] = {0,  1, -1,  0,  0,  1,  1, -1, -1};
 /*                    |   |   |   |   |   |   |   |   | */
 const int finv[NPOP]={0,  2,  1,  4,  3,  8,  7,  6,  5};
 
+const double cc[NPOP]={0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5}; 
+
+const double H2xx[NPOP] = {-1.0/3.0, -1.0/3.0, -1.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0}; 
+const double H2xy[NPOP] = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0, -1.0, 1.0};
+const double H2yy[NPOP] = {-1.0/3.0, 2.0/3.0, 2.0/3.0, -1.0/3.0, -1.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0, 2.0/3.0}; 
+
+const double H3xxy[NPOP] = {0.0, -1.0/3.0, 1.0/3.0, 0.0, 0.0, 2.0/3.0, 2.0/3.0, -2.0/3.0, -2.0/3.0};
+const double H3xyy[NPOP] = {0.0, 0.0, 0.0, -1.0/3.0, 1.0/3.0, 2.0/3.0, -2.0/3.0, 2.0/3.0, -2.0/3.0};
+
+const double H4xxyy[NPOP] = {1.0/9.0, -2.0/9.0, -2.0/9.0, -2.0/9.0, -2.0/9.0, 4.0/9.0, 4.0/9.0, 4.0/9.0, 4.0/9.0};
+
 
 /*     _______________
  *    |               |
@@ -48,8 +59,8 @@ const int finv[NPOP]={0,  2,  1,  4,  3,  8,  7,  6,  5};
 
 const double Csound = 343.2; // sound speed
 double Mach; 
-double U0 = 0.0;
-double V0 = 68.2; // Votex is advected across the interface with M=0.2
+double U0;
+double V0; // Votex is advected across the interface with M=0.2
 double Es = 0.01; // vortex strength
 double CFL;
 
@@ -58,7 +69,7 @@ double Pref; // pressure reference
 double P0; // pressure parameter of solution -> p_solver
 
 
-double viscosity = 1.5e-05; // viscosity
+double viscosity = 0.003432; // viscosity
 
 double pos = 0.5; // controls relative position of the vortex in y direction
 double DX; // dimensional quadrant size
@@ -67,7 +78,10 @@ double Dt; // non-dimensional time step
 double omega_g, tau, tau_g; // relaxation parameters
 
 double Cs2 = 1./3.;
+double invCs2 = 3.0;
 double invCs4 = 9.0;
+double invCs6 = 27.0;
+double invCs8 = 81.0; 
 
 int current_slot = 0, other_slot = 1; // two-field configuration
 
@@ -86,6 +100,11 @@ void Streaming(double *);
 void FiniteVol(double **);
 void Flux(double **, double ***, int);
 void FiniteVolHeun(double **, double ***);
+
+void FiniteVolRK3_1(double **, double ***, double ***, double ***);
+void FiniteVolRK3_2(double **, double ***, double ***, double ***);
+void FiniteVolRK3_3(double **, double ***, double ***, double ***, double *);
+
 void FiniteVolRK4_1(double **, double ***, double ***, double ***);
 void FiniteVolRK4_23(double **, double ***, double ***, double ***, int);
 void FiniteVolRK4_4(double **, double ***, double ***, double ***, double *);
@@ -124,6 +143,9 @@ void ComputeMassLB(double *);
  */  
 void ComputeTransferLBM2FV(double *, double **);
 
+/** Galileian Correction
+ */
+void ComputeCorrection(double **, double **);
 
 /** Sponge Zone
   */
@@ -150,7 +172,7 @@ int main (int argc, const char * argv[]){
   Pref = (Csound*Csound)/1.4;
   P0 = Csound * Csound;
 
-	DX = 0.01;
+	DX = 0.0025;
 	Dt = 1.;
 
   double *sigma = (double *) malloc (xMax_NS*yMax_NS*sizeof(double));
@@ -172,7 +194,7 @@ int main (int argc, const char * argv[]){
         }
   grad_LB = (double **) malloc (2*xMaxp_LB*yMaxp_LB*sizeof(double *));
   for(i=0; i<(2 * xMaxp_LB * yMaxp_LB); i++){
-    grad_LB[i] = (double *)malloc(sizeof(double)*4);
+    grad_LB[i] = (double *)malloc(sizeof(double)*6);
         }
 
   flux = (double ***) malloc (xMaxp_NS*yMaxp_NS*sizeof(double **));
@@ -209,6 +231,12 @@ int main (int argc, const char * argv[]){
     /** Simulation parameters
 	 */
 
+  enum{shearlayer=0, vortex, pulse};
+
+  // set testcase
+  int testcase = shearlayer;
+  U0 = 102.96;
+  V0 = 0.0;
 
 	Mach = sqrt(U0*U0 + V0*V0) / Csound;
 	CFL = (Mach + 1.)/sqrt(3.)*Dt; // CFL number with respect to the macroscopic velocity
@@ -234,11 +262,7 @@ int main (int argc, const char * argv[]){
   omega_g = 1. / tau_g;
   fprintf(stdout, "omega_g = %g \n", omega_g);
 
-  enum{shearlayer=1, vortex, pulse};
-
-  // set testcase
-  int testcase= vortex;
-
+  
   // Initialize simulation in fluid domain (NS) and resolution domain 1 (LB)
   InitializeFluidNS(macro_NS, testcase); // -> NS
   InitializeFluidLB(fcol, macro_LB, testcase); // -> LBM
@@ -260,7 +284,7 @@ int main (int argc, const char * argv[]){
 
     switch(time_marching){ // can be changed in header file (ludwig.h)
 
-      case 0: // Four-step Runge Kutta scheme for FV-NS
+      case 0: // Four-stage Runge Kutta scheme for FV-NS
 
         /*
          * STEP 1
@@ -299,7 +323,37 @@ int main (int argc, const char * argv[]){
         ComputeMacroP_BC(macro_NS);
       break;
 
-      case 1: // Two-step Runge-Kutta for FV-NS
+      case 1: // Three-stage Runge Kutta scheme for FV-NS
+
+        /*
+         * STEP 1
+         */
+
+        FiniteVolRK3_1(macro_NS, RK, QRK, macro_Surf_Int);
+        GuardRK4(RK, 1); // treament periodic boundaries rho, u
+        ClosureRK4(RK, 1); // Computation of S_ij with updated velocities
+        GuardRK4P(RK, 1); // treament periodic boundaries P
+
+        /*
+         * STEP 2
+         */
+
+        FiniteVolRK3_2(macro_NS, RK, QRK, macro_Surf_Int);
+        GuardRK4(RK, 2);
+        ClosureRK4(RK, 2);
+        GuardRK4P(RK, 2);
+
+        /*
+         * STEP 3
+         */
+
+        FiniteVolRK3_3(macro_NS, RK, QRK, macro_Surf_Int, sigma);
+        ComputeMacro_BC(macro_NS);
+        Closure(macro_NS);
+        ComputeMacroP_BC(macro_NS);
+      break;
+
+      case 2: // Two-step Runge-Kutta for FV-NS
 
         /*
          * STEP 1
@@ -369,4 +423,42 @@ int main (int argc, const char * argv[]){
 
   }
   return 0;
+}
+
+void ComputeCorrection(double **macro, double **grad_LB){
+    int i, j, l, inode, ilink, xlink, ylink;
+    double rho, u, v;
+
+    int off = current_slot * xMaxp_LB*yMaxp_LB;
+    for(i=1; i<=xMax_LB; i++)
+        for(j=2; j<=(yMax_LB-1); j++){
+
+            double u3x=0.0, v3y=0.0;
+
+            for(l=0; l<NPOP; l++){
+
+                xlink = i+ex[l];
+                ylink = j+ey[l];
+                if(xlink<1) xlink=xMax_LB;
+                if(xlink>xMax_LB) xlink=1;
+// 16.03 check because doamin is not periodic in y anymore 
+                //if(ylink<1) ylink=yMax_rootgrid; 
+                //if(ylink>yMax_rootgrid) ylink=1;
+
+
+                ilink = off + IDM_LB(xlink, ylink);
+
+                rho = macro[ilink][RHO];
+                u = macro[ilink][RHOUX] / rho;
+                v = macro[ilink][RHOUY] / rho;
+
+                u3x += (cc[l]/4.0) * ex[l] * (rho*u*u*u);
+                v3y += (cc[l]/4.0) * ey[l] * (rho*v*v*v);
+                }
+
+            inode = off + IDM_LB(i, j);
+
+            grad_LB[inode][UX3X] = u3x;
+            grad_LB[inode][UY3Y] = v3y;
+      }
 }

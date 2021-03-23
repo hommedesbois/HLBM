@@ -49,6 +49,12 @@ case 0:
         macro[id][6] = rho * (1./3. + (uy * uy)) - 2./3.*tau*rho*Syy;
         break;
 case 1:
+        macro[id][3] = rho * (1./3. + (ux * ux)) - 2./3.*tau*rho*Sxx;
+        macro[id][4] = rho * ux * uy - 2./3. * tau * rho* Sxy;
+        macro[id][5] = rho * uy * ux - 2./3. * tau * rho* Syx;
+        macro[id][6] = rho * (1./3. + (uy * uy)) - 2./3.*tau*rho*Syy;
+        break;
+case 2:
         macro[id][3] = 1./3. * rho - 2./3.*tau*rho*Sxx;
         macro[id][4] = - 2./3. * tau * rho* Sxy;
         macro[id][5] = - 2./3. * tau * rho* Syx;

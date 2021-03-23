@@ -5,19 +5,22 @@
  *  Copyright 2016 CNRS. All rights reserved.
  *
  */
-#define NSTEPS 1751 // results in a single domain passage
-#define period 10
+#define NSTEPS 3601 // results in a single domain passage
+#define period 200
 // filter coefficient
-#define alpha 0.1
-// Time-marching scheme:  0 -> Runge-Kutta 4; 1 -> Runge-Kutta 2
-#define time_marching 0
+#define alpha 0.0
+// Time-marching scheme:  0 -> Runge-Kutta 4; 1 -> Runge-Kutta 3; 2 -> Runge-Kutta 2
+#define time_marching 1
 // coefficient for hybrid recursive regularization 
-#define sigma2 0.98 
+#define sigma_hrr 0.98
+#define sigma_corr 0.0
+
 
 enum {E = 0, W, N, S};
 enum {RHO=0, RHOUX, RHOUY, PXX, PXY, PYX, PYY};
 enum {PIXX=3, PIXY, PIYX, PIYY};
-enum {UXX=0, UXY, UYX, UYY};
+enum {UXX=0, UXY, UYX, UYY, UNEXT};
+enum {UX3X = UNEXT , UY3Y};
 
 #define max(a,b) ({ typeof (a) _a = (a); typeof (b) _b = (b); _a > _b ? _a : _b; })
 #define min(a,b) ({ typeof (a) _a = (a); typeof (b) _b = (b); _a < _b ? _a : _b; })
@@ -38,15 +41,15 @@ enum {UXX=0, UXY, UYX, UYY};
  */
 
  // NS
-#define xMax_NS 100
-#define yMax_NS 200
+#define xMax_NS 400
+#define yMax_NS 400
 
 #define xMaxp_NS (xMax_NS + 2) // padded dimensions for periodic BC
 #define yMaxp_NS (yMax_NS + 2)
 
 // LB
-#define xMax_LB 100
-#define yMax_LB 100
+#define xMax_LB 400
+#define yMax_LB 200
 
 #define xMaxp_LB (xMax_LB + 2) // padded dimensions for periodic BC and transition overlay
 #define yMaxp_LB (yMax_LB + 2)
@@ -82,21 +85,24 @@ extern const double w[NPOP];
 extern const int ex[NPOP];
 extern const int ey[NPOP];
 extern const int finv[NPOP];
+extern const double H2xx[NPOP], H2xy[NPOP], H2yy[NPOP];
+extern const double H3xxy[NPOP], H3xyy[NPOP];
+extern const double H4xxyy[NPOP];
 
 extern int current_slot, other_slot;
-
 
 extern double rho0; //  density parameter
 extern const double Csound; // sound speed
 extern double U0, V0; //  velocity parameter
 extern double Es;
+
 extern double Pref; // pressure reference
 extern double P0; // pressure parameter
 extern double viscosity; // viscosity
 extern double Mach;
 
 extern double Cs2;
-extern double invCs4;
+extern double invCs2, invCs4, invCs6, invCs8;
 
 extern double Length;
 extern double pos;
@@ -104,3 +110,4 @@ extern double DX;
 extern double Dt;
 
 extern double omega_g, tau, tau_g;
+

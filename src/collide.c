@@ -67,13 +67,17 @@ for(i=1; i<=xMax_LB; i++)
 }
 
 
-void HRRCollision(double *cell, double **macro, double **grad){
+void HRRCollision(double *cell, double **macro, double **grad, double **corr){
     int i, j, l, id, id_m, off, off_m;
-    double rho, rho_u, rho_v, u, v, feq, f_1;
+    double rho, rho_u, rho_v, u, v;
+    double feq, f_1, f00, f01, f02, f03, f04;
     double Pxx_eq, Pxy_eq, Pyy_eq;
     double Pxx_neq, Pxy_neq, Pyy_neq;
     double Sxx, Syy, Sxy;
-    double axx, ayy, axy;
+    double a12xx, a12yy, a12xy;
+    double a13xyy, a13xxy;
+    double a14xxyy;
+    double Scorr[NPOP];
 
 
     off = current_slot * xMaxp_LB * yMaxp_LB * NPOP;
@@ -86,9 +90,9 @@ void HRRCollision(double *cell, double **macro, double **grad){
 
             id_m = off_m + IDM_LB(i,j);
 
-            rho = macro[id_m][0];
-            rho_u = macro[id_m][1];
-            rho_v = macro[id_m][2];
+            rho = macro[id_m][RHO];
+            rho_u = macro[id_m][RHOUX];
+            rho_v = macro[id_m][RHOUY];
 
             u = rho_u/rho;
             v = rho_v/rho;
@@ -103,28 +107,47 @@ void HRRCollision(double *cell, double **macro, double **grad){
             Pxy_eq = rho * u * v;
             Pyy_eq = rho * (1./3. + (v * v));
 
-            Pxx_neq     = macro[id_m][3]-Pxx_eq;
-            Pxy_neq     = macro[id_m][4]-Pxy_eq;
-            Pyy_neq     = macro[id_m][6]-Pyy_eq;
+            Pxx_neq     = macro[id_m][PXX]-Pxx_eq;
+            Pxy_neq     = macro[id_m][PXY]-Pxy_eq;
+            Pyy_neq     = macro[id_m][PYY]-Pyy_eq;
 
-            axx = Pxx_neq * sigma2 + (1.0-sigma2)*(-2.0*tau_g*rho*Sxx*(1./3.)); 
-            ayy = Pyy_neq * sigma2 + (1.0-sigma2)*(-2.0*tau_g*rho*Syy*(1./3.)); 
-            axy = Pxy_neq * sigma2 + (1.0-sigma2)*(-2.0*tau_g*rho*Sxy*(1./3.)); 
+            a12xx = Pxx_neq * sigma_hrr + (1.0-sigma_hrr)*(-2.0*tau_g*rho*Sxx*(1./3.)); 
+            a12yy = Pyy_neq * sigma_hrr + (1.0-sigma_hrr)*(-2.0*tau_g*rho*Syy*(1./3.)); 
+            a12xy = Pxy_neq * sigma_hrr + (1.0-sigma_hrr)*(-2.0*tau_g*rho*Sxy*(1./3.)); 
 
+            a13xyy = 2.0*v*a12xy + u*a12yy;
+            a13xxy = v*a12xx + 2.0*u*a12xy;
+            
+            a14xxyy = v*a13xxy + u*u*a12yy + 2*u*v*a12xy;
 
             for(l=0; l<NPOP; l++){
 
                 id = off + IDF(i,j,l);
 
-                feq = w[l]*rho*(1.0 -
-                1.5*(u*u + v*v) +
-                3.0*(ex[l]*u + ey[l]*v) +
-                4.5*(ex[l]*u + ey[l]*v) *    (ex[l]*u + ey[l]*v) +
-                0.5*(ex[l]*u + ey[l]*v) * (9*(ex[l]*u + ey[l]*v) * (ex[l]*u + ey[l]*v) - 9*(u*u+v*v)));
-
-                f_1 = w[l]*0.5*invCs4*((ex[l]*ex[l]-Cs2)*axx+2.0*ex[l]*ey[l]*axy+(ey[l]*ey[l]-Cs2)*ayy); // second order regularization
+                f00 = 1.0;
+                f01 = ex[l]*u + ey[l]*v;
+                f02 = H2xx[l]*(u*u) + H2yy[l]*(v*v) + 2*H2xy[l]*u*v;
+                f03 = H3xxy[l]*u*u*v + H3xyy[l]*u*v*v;
+                f04 = H4xxyy[l]*u*u*v*v;
+                
+                //
+                feq = w[l]*rho*(f00 + invCs2*f01 + 0.5*invCs4*f02 + 0.5*invCs6*f03 + 0.25*invCs8*f04);  
+                
+                /*/
+                feq = w[l]*rho*(1.0   
+                    + 3.0*(ex[l]*u + ey[l]*v)
+                    + 4.5*(ex[l]*u + ey[l]*v) * (ex[l]*u + ey[l]*v) -1.5*(u*u + v*v) // f02
+                    + 0.5*(ex[l]*u + ey[l]*v) * (9*(ex[l]*u + ey[l]*v) * (ex[l]*u + ey[l]*v) - 9*(u*u+v*v)) 
+                    + 0.25*invCs8*f04); // f04
+                //*/
+                
+                f_1 = w[l] * (0.5*invCs4*(H2xx[l]*a12xx + 2.0*H2xy[l]*a12xy + H2yy[l]*a12yy) 
+                              + 0.5 * invCs6 * (H3xxy[l]*a13xxy + H3xyy[l]*a13xyy)
+                              + 0.25 * invCs8 * H4xxyy[l]*a14xxyy); // fourth order regularization
            
-                cell[id] = (1-omega_g)*f_1+feq;
+                Scorr[l] = w[l]*0.5*invCs4*(H2xx[l]*grad[id_m][UX3X] + H2yy[l]*grad[id_m][UY3Y]);
+
+                cell[id] = feq + (1-omega_g)*f_1 + sigma_corr * Scorr[l];
             }
         }
 }

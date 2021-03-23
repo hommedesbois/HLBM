@@ -411,11 +411,11 @@ for(i=1; i<=xMax_NS; i++)
             Macro_Surf[(k-1)][b] = Surf[1][i][k];
             else
             	*/
-	    Macro_Surf[(k-1)][b] = coef * Macro[id][k] + coef_p1 * Macro[id_p1][k];
+	    Macro_Surf[(k-1)][b] = coef * Macro[id][k] + coef_p1 * Macro[id_p1][k]; // Interpolation of marco on surface
 
             }
 
-        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b];
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b]; // slope
         sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
         sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
         }
@@ -567,6 +567,206 @@ for(i=1; i<=xMax_NS; i++)
     Macro[id_new][RHO] = Macro[id_old][RHO] - Dt/6. * (QRK[0][id_rk][0] + 2*QRK[1][id_rk][0] + 2*QRK[2][id_rk][0] + QRK[3][id_rk][0]) - Dt * s[id_s]* (Macro[id_old][RHO]-rho0);
     Macro[id_new][RHOUX] = Macro[id_old][RHOUX] - Dt/6. * (QRK[0][id_rk][1] + 2*QRK[1][id_rk][1] + 2*QRK[2][id_rk][1] + QRK[3][id_rk][1]) - Dt * s[id_s]* (Macro[id_old][RHOUX]-rho0*U0/(sqrt(3)*Csound));
     Macro[id_new][RHOUY] = Macro[id_old][RHOUY] - Dt/6. * (QRK[0][id_rk][2] + 2*QRK[1][id_rk][2] + 2*QRK[2][id_rk][2] + QRK[3][id_rk][2]) - Dt * s[id_s]* (Macro[id_old][RHOUY]-rho0*V0/(sqrt(3)*Csound));
+
+    }
+}
+
+
+void FiniteVolRK3_1(double **Macro, double ***RK, double ***QRK, double ***Surf){
+int i, j, k, b;
+int id, id_rk, id_p1;
+int off;
+/*
+ *  Surface normals */
+/*                 E   W  N   S
+                   |   |  |   |            */
+const int nx[4] = {1, -1, 0,  0};
+const int ny[4] = {0,  0, 1, -1};
+
+double coef, coef_p1;
+double Macro_Surf[6][4];
+
+off = current_slot * xMaxp_NS * yMaxp_NS;
+
+for(i=1; i<=xMax_NS; i++)
+    for(j=1; j<=yMax_NS; j++){
+
+    double sum_rho_u = 0.0, sum_Px = 0.0, sum_Py = 0.0;
+
+    id = off + IDM_NS(i,j);
+    id_rk = IDM_NS(i,j);
+
+    for(b=0; b<4; b++){
+        for(k=RHOUX; k<=PYY; k++){
+
+            id_p1 = off + IDM_NS((i + nx[b]), (j + ny[b]));
+
+            coef    = 0.5;
+            coef_p1 = 0.5;
+
+		/*
+		***** rechange if periodicity removed ***
+            if(j==1 && b==3)
+            Macro_Surf[(k-1)][b] = Surf[0][i][k];
+            else if(j==yMax_NS && b==2)
+            Macro_Surf[(k-1)][b] = Surf[1][i][k];
+            else
+            	*/
+	    Macro_Surf[(k-1)][b] = coef * Macro[id][k] + coef_p1 * Macro[id_p1][k]; // Interpolation of marco on surface
+
+            }
+
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b]; // slope
+        sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
+        sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
+        }
+
+    QRK[0][id_rk][0] = -sum_rho_u;
+    QRK[0][id_rk][1] = -sum_Px;
+    QRK[0][id_rk][2] = -sum_Py;
+
+    /*
+    RK[0] = Macro
+    RK[0] = Macro
+    RK[0] = Macro
+    */
+
+    RK[1][id_rk][0] = Macro[id][RHO] + Dt * QRK[0][id_rk][0];
+    RK[1][id_rk][1] = Macro[id][RHOUX] + Dt * QRK[0][id_rk][1];
+    RK[1][id_rk][2] = Macro[id][RHOUY] + Dt * QRK[0][id_rk][2];
+    }
+}
+
+
+void FiniteVolRK3_2(double **Macro, double ***RK, double ***QRK, double ***Surf){
+int i, j, k, b;
+int id, id_rk, id_p1;
+int off;
+/*
+ *  Surface normals */
+/*                 E   W  N   S
+                   |   |  |   |            */
+const int nx[4] = {1, -1, 0,  0};
+const int ny[4] = {0,  0, 1, -1};
+
+double coef, coef_p1;
+double Macro_Surf[6][4];
+
+off = current_slot * xMaxp_NS * yMaxp_NS;
+
+for(i=1; i<=xMax_NS; i++)
+    for(j=1; j<=yMax_NS; j++){
+
+    double sum_rho_u = 0.0, sum_Px = 0.0, sum_Py = 0.0;
+
+    id = off + IDM_NS(i,j);
+    id_rk = IDM_NS(i,j);
+
+    for(b=0; b<4; b++){
+        for(k=RHOUX; k<=PYY; k++){
+
+            id_p1 = IDM_NS((i + nx[b]), (j + ny[b]));
+
+            coef    = 0.5;
+            coef_p1 = 0.5;
+
+            if(j==1 && b==3)
+            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), yMax_NS)][k]; // Surf[0][i][k]; --> change back if periodicity removed
+            else if(j==yMax_NS && b==2)
+            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), 1)][k];       // Surf[1][i][k]; 
+            else
+            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][id_p1][k];
+            }
+
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b];
+        sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
+        sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
+        }
+
+    QRK[1][id_rk][0] = -sum_rho_u;
+    QRK[1][id_rk][1] = -sum_Px;
+    QRK[1][id_rk][2] = -sum_Py;
+
+    /*
+    RK[0] = Macro
+    RK[0] = Macro
+    RK[0] = Macro
+    */
+    RK[2][id_rk][0] = 0.75 * Macro[id][RHO] +   0.25 * RK[1][id_rk][0] + 0.25 * Dt * QRK[1][id_rk][0];
+    RK[2][id_rk][1] = 0.75 * Macro[id][RHOUX] + 0.25 * RK[1][id_rk][1] + 0.25 * Dt * QRK[1][id_rk][1];
+    RK[2][id_rk][2] = 0.75 * Macro[id][RHOUY] + 0.25 * RK[1][id_rk][2] + 0.25 * Dt * QRK[1][id_rk][2];
+    }
+}
+
+void FiniteVolRK3_3(double **Macro, double ***RK, double ***QRK, double ***Surf, double *s){
+
+int i, j, k, b;
+int id_rk, id_p1, id_s, id_old, id_new;
+int off0, off1;
+/*
+ *  Surface normals */
+/*                 E   W  N   S
+                   |   |  |   |            */
+const int nx[4] = {1, -1, 0,  0};
+const int ny[4] = {0,  0, 1, -1};
+
+double coef, coef_p1;
+double Macro_Surf[6][4];
+
+off0 = current_slot * xMaxp_NS * yMaxp_NS;
+off1 = other_slot * xMaxp_NS * yMaxp_NS;
+
+
+for(i=1; i<=xMax_NS; i++)
+    for(j=1; j<=yMax_NS; j++){
+
+    double sum_rho_u = 0.0, sum_Px = 0.0, sum_Py = 0.0;
+
+    id_rk = IDM_NS(i,j);
+    id_old = off0 + IDM_NS(i,j);
+    id_new = off1 + IDM_NS(i,j);
+    id_s = (j-1)*xMax_NS + (i-1);
+
+    for(b=0; b<4; b++){
+        for(k=1; k<=6; k++){
+
+            id_p1 = IDM_NS((i + nx[b]), (j + ny[b]));
+
+            coef    = 0.5;
+            coef_p1 = 0.5;
+
+            if(j==1 && b==3)
+            Macro_Surf[(k-1)][b] = coef * RK[2][id_rk][k] + coef_p1 * RK[2][IDM_NS((i + nx[b]), yMax_NS)][k]; // Surf[0][i][k];
+            else if(j==yMax_NS && b==2)
+            Macro_Surf[(k-1)][b] = coef * RK[2][id_rk][k] + coef_p1 * RK[2][IDM_NS((i + nx[b]), 1)][k]; // Surf[1][i][k];
+            else
+            Macro_Surf[(k-1)][b] = coef * RK[2][id_rk][k] + coef_p1 * RK[2][id_p1][k];
+            }
+
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b];
+        sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
+        sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
+        }
+
+    QRK[2][id_rk][0] = -sum_rho_u;
+    QRK[2][id_rk][1] = -sum_Px;
+    QRK[2][id_rk][2] = -sum_Py;
+
+    /*
+    RK[0] = Macro
+    RK[0] = Macro
+    RK[0] = Macro
+    */
+//    if(j>xMax_NS){
+//    Macro[id_new][0] = Macro[id_old][0] - Dt/6. * (QRK[0][id_rk][0] + 2*QRK[1][id_rk][0] + 2*QRK[2][id_rk][0] + QRK[3][id_rk][0]);
+//    Macro[id_new][1] = Macro[id_old][1] - Dt/6. * (QRK[0][id_rk][1] + 2*QRK[1][id_rk][1] + 2*QRK[2][id_rk][1] + QRK[3][id_rk][1]);
+//    Macro[id_new][2] = Macro[id_old][2] - Dt/6. * (QRK[0][id_rk][2] + 2*QRK[1][id_rk][2] + 2*QRK[2][id_rk][2] + QRK[3][id_rk][2]);
+
+    s[id_s] = 0.0; // sponge zones deactivated
+
+    Macro[id_new][RHO] =   1./3. * Macro[id_old][RHO]   + 2./3.*RK[2][id_rk][0] + 2./3.*Dt*QRK[2][id_rk][0] - Dt * s[id_s]* (Macro[id_old][RHO]-rho0);
+    Macro[id_new][RHOUX] = 1./3. * Macro[id_old][RHOUX] + 2./3.*RK[2][id_rk][1] + 2./3.*Dt*QRK[2][id_rk][1] - Dt * s[id_s]* (Macro[id_old][RHOUX]-rho0*U0/(sqrt(3)*Csound));
+    Macro[id_new][RHOUY] = 1./3. * Macro[id_old][RHOUY] + 2./3.*RK[2][id_rk][2] + 2./3.*Dt*QRK[2][id_rk][2] - Dt * s[id_s]* (Macro[id_old][RHOUY]-rho0*V0/(sqrt(3)*Csound));
 
     }
 }

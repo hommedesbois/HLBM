@@ -49,7 +49,7 @@ void ComputeFcol_BC(double *cell){
 }
 
 void ComputeMacroLB_BC(double **Macro){
-	int i,j,k;
+	int j,k;
 
 	int i_in, i_out;
 	int idx_in, idx_out, offset;

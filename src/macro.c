@@ -104,13 +104,13 @@ for(i=1; i<=xMax_LB; i++)
           Pxy_eq_t1 = rho * u * v;
           Pyy_eq_t1 = rho * (1./3. + (v * v));
 
-          //   P reconstructed from Peq at two different time steps. Emmanuel's formula.
+          //  P reconstructed from Peq at two different time steps. Emmanuel's formula.
           Pxx = Pxx_eq_t1 - tau_g * (Pxx_eq_t1 - Pxx_eq_t0);
           Pxy = Pxy_eq_t1 - tau_g * (Pxy_eq_t1 - Pxy_eq_t0);
           Pyy = Pyy_eq_t1 - tau_g * (Pyy_eq_t1 - Pyy_eq_t0);
           /*/
 
-          // only equilibrium part taken into account
+          //   P recosntructed form Peq only. 
           Pxx = Pxx_eq_t1;
           Pxy = Pxy_eq_t1;
           Pyy = Pyy_eq_t1;
@@ -187,23 +187,17 @@ for(i=1; i<=xMax_LB; i++)
           Pxy_eq_t1 = rho * u * v;
           Pyy_eq_t1 = rho * (1./3. + (v * v));
 
-          //
-          //P reconstructed from Peq at two different time steps. Emmanuel's formula.
+          //   P reconstructed from Peq at two different time steps. Emmanuel's formula.
           Pxx = Pxx_eq_t1 - tau_g * (Pxx_eq_t1 - Pxx_eq_t0);
           Pxy = Pxy_eq_t1 - tau_g * (Pxy_eq_t1 - Pxy_eq_t0);
           Pyy = Pyy_eq_t1 - tau_g * (Pyy_eq_t1 - Pyy_eq_t0);
-          
-          /* rho         = macro_NS[id_fd][0];
-          rho_u       = macro_NS[id_fd][1];
-          rho_v       = macro_NS[id_fd][2];
+          /*/
 
-          u = rho_u / rho;
-          v = rho_v / rho;
-
-          // for now only equilibrium part!
-          Pxx = rho * (1./3. + (u * u));
-          Pxy = rho * u * v;
-          Pyy = rho * (1./3. + (v * v)); */
+          //   P recosntructed form Peq only. 
+          Pxx = Pxx_eq_t1;
+          Pxy = Pxy_eq_t1;
+          Pyy = Pyy_eq_t1;
+         //*/
 
        }else{ // moments of f
        rho = 0.0, rho_u = 0.0, rho_v = 0.0;

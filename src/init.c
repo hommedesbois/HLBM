@@ -17,20 +17,19 @@ void InitializeFluidNS(double **macro, int testcase){
     double Esc;
 
     double r0;
-    double Rc = 0.1;
+    double Rc = 15 * DX;
 
     double Xc = (double)(xMax_NS/2.)*DX;
     double Yc = (double)(yMax_NS*pos)*DX;
 
     double xpos, ypos; // position
     double r2;
-    double Ueddy, Veddy, Peddy;
+    double Ueddy, Veddy;
     double duxdx, duxdy, duydx, duydy;
     double Sxx, Sxy, Syx, Syy;
 
 	double a0;
 	double Length   = DX*yMax_NS;
-	int tc = 0;
 
 	for(i=0; i<xMaxp_NS; i++)
 		for(j=0; j<yMaxp_NS; j++){
@@ -44,7 +43,7 @@ void InitializeFluidNS(double **macro, int testcase){
                 fprintf(stdout,"y_0 (NS) = %g\n", ypos);
 
     switch(testcase){
-    case 1:
+    case 0:
 
                 /*
                  ****** SHEAR LAYER *****
@@ -52,9 +51,8 @@ void InitializeFluidNS(double **macro, int testcase){
 
         rho = (P0/(Csound*Csound));
 
-        a0 = 0.01*rho;
-        r0 = 2.5*DX; // shear layer width
-
+        a0 = 0.01;
+        r0 = 7*DX; // shear layer width
         ux = U0*tanh((ypos-Length/4.)/r0)*tanh((3.*Length/4.-ypos)/r0);
 		uy = U0*a0*sin(2.*M_PI*(xpos/Length  + 0.25));
 
@@ -64,7 +62,7 @@ void InitializeFluidNS(double **macro, int testcase){
 		ux /= (sqrt(3.0)*Csound);
 		uy /= (sqrt(3.0)*Csound);
 		break;
-    case 2:
+    case 1:
             /*
              ****** PSEUDO ISENTROPIC VORTEX ****
              */
@@ -76,9 +74,6 @@ void InitializeFluidNS(double **macro, int testcase){
 
             rho1   = - ((rho0*Es*Es)/(2.0))*exp(1.0-(r2/(Rc*Rc)));
             rho     = rho0 + rho1 + 1./2.8 * (rho1 * rho1);
-
-//            Peddy   = - ((rho0*Es*Es)/(2.0))*exp(1.0-(r2/(Rc*Rc)));
-//            rho    = (P0 + ((Pref+Peddy) - Pref))/(Csound*Csound);
 
             Ueddy   = -(Esc/(Rc))*(ypos-Yc)*exp(0.5-(r2/(2.0*Rc*Rc)));
             ux      = (U0 + Ueddy) / (sqrt(3.0)*Csound);
@@ -99,7 +94,7 @@ void InitializeFluidNS(double **macro, int testcase){
             duydy = -Esc/Rc*(xpos-Xc)*exp(0.5-(r2/(2.0*Rc*Rc)))*(ypos-Yc)/(Rc*Rc);
             duydy *= DX / (sqrt(3.0)*Csound);
             break;
-    case 3:
+    case 2:
             r0 = 0.001;
             Ppulse = 100.*exp(-((xpos-Xc)*(xpos-Xc)+(ypos-Yc)*(ypos-Yc))/r0);
 
@@ -145,19 +140,18 @@ void InitializeFluidLB(double *cell, double **macro, int testcase){
     double Esc;
 
     double r0;
-    double Rc = 0.1;
+    double Rc = 15 * DX;
 
     double Xc = (double)(xMax_NS/2.)*DX;
     double Yc = (double)(yMax_NS*pos)*DX;
 
     double xpos, ypos; // position
     double r2;
-    double Ueddy, Veddy, Peddy;
+    double Ueddy, Veddy;
     double duxdx, duxdy, duydx, duydy;
 
 	double a0;
 	double Length = DX*yMax_NS;
-	int tc = 0;
 
     double feq, fneq;
 
@@ -172,15 +166,14 @@ void InitializeFluidLB(double *cell, double **macro, int testcase){
              if(i==0 && j==0)
                 fprintf(stdout,"y_0 (LB) = %g\n", ypos);
 switch(testcase){
-    case 1:
+    case 0:
                 /*
                  ****** SHEAR LAYER *****
                  */
-        r0 = 2.5*DX;
+        r0 = 7*DX;
         rho = (P0/(Csound*Csound));
-        a0 = 0.01*rho;
+        a0 = 0.01;
 
-        //ux = U0*tanh((ypos+shift*DX-(Length/4.))/r0)*tanh((3.*Length/4.-(ypos+shift*DX))/r0);
         ux = U0*tanh((ypos-Length/4.)/r0)*tanh((3.*Length/4.-ypos)/r0);
 		uy = U0*a0*sin(2.*M_PI*(xpos/Length  + 0.25));
 
@@ -188,7 +181,7 @@ switch(testcase){
 		uy = uy / (sqrt(3.0)*Csound);
 		break;
 
-    case 2:
+    case 1:
 
 		/*
              ****** PSEUDO ISENTROPIC VORTEX ****
@@ -198,12 +191,8 @@ switch(testcase){
 
             r2 = (xpos-Xc)*(xpos-Xc) + (ypos-Yc)*(ypos-Yc);
 
-
             rho1   = - ((rho0*Es*Es)/(2.0))*exp(1.0-(r2/(Rc*Rc)));
             rho     = rho0 + rho1 + 1./2.8 * (rho1 * rho1);
-
-//            Peddy   = - ((rho0*Es*Es)/(2.0))*exp(1.0-(r2/(Rc*Rc)));
-//            rho    = (P0 + ((Pref+Peddy) - Pref))/(Csound*Csound);
 
             Ueddy   = -(Esc/(Rc))*(ypos-Yc)*exp(0.5-(r2/(2.0*Rc*Rc)));
             ux      = (U0 + Ueddy) / (sqrt(3.0)*Csound);
@@ -225,16 +214,16 @@ switch(testcase){
 
             break;
 
-    case 3:
+    case 2:
 
             r0 = 0.001;
             Ppulse = 100.*exp(-((xpos-Xc)*(xpos-Xc)+(ypos-Yc)*(ypos-Yc))/r0);
 
             rho = (P0 + ((Pref+Ppulse) - Pref))/(Csound*Csound);
 
-            ux              = U0 / (sqrt(3.0)*Csound); // in lattice units
+            ux = U0 / (sqrt(3.0)*Csound); // in lattice units
 
-            uy              = V0 / (sqrt(3.0)*Csound);
+            uy = V0 / (sqrt(3.0)*Csound);
 
             duxdx =  0.0;
             duxdx *= DX / (sqrt(3.0)*Csound);
