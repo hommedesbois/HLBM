@@ -289,7 +289,7 @@ void ComputeMacroP_BC(double **Macro){
 }
 
 
-void GuardRK4(double ***RK, int step){
+void GuardRK(double ***RK, int step){
 	int i,j,k;
 
 	int i_in, i_out, j_in, j_out;
@@ -387,7 +387,7 @@ void GuardRK4(double ***RK, int step){
 
 }
 
-void GuardRK4P(double ***RK, int step){
+void GuardRKP(double ***RK, int step){
 	int i,j,k;
 
 	/*

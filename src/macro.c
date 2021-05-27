@@ -36,7 +36,7 @@ for(i=1; i<=xMax_LB; i++)
 
           
           /*
-          *  COMPUTATION  OF P^eq at previous time-step
+          *  Computation of P^eq at previous time-step
           */
           
           // indices that point to valid data in the LB domain
@@ -53,35 +53,27 @@ for(i=1; i<=xMax_LB; i++)
 
           
           rho = macro_LB[id_1][0], ux = macro_LB[id_1][1] / rho, uy = macro_LB[id_1][2] / rho;
-          // feq_1 = w[1] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*uy + 4.5*uy*uy + 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
           feq_2 = w[2] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*uy + 4.5*uy*uy - 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_2][0], ux = macro_NS[id_2][1] / rho, uy = macro_NS[id_2][2] / rho;
-          // feq_2 = w[2] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*uy + 4.5*uy*uy - 0.5*uy*(-9 * uy*uy + 9 * (ux*ux + uy*uy)));
           feq_1 = w[1] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*uy + 4.5*uy*uy + 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_3][0], ux = macro_NS[id_3][1]/rho, uy = macro_NS[id_3][2]/rho;
-          // feq_3 = w[3] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*ux + 4.5*ux*ux + 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
           feq_4 = w[4] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*ux + 4.5*ux*ux - 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_4][0], ux = macro_NS[id_4][1]/rho, uy = macro_NS[id_4][2]/rho;
-          // feq_4 = w[4] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*ux + 4.5*ux*ux - 0.5*ux*(-9 * ux*ux + 9 * (ux*ux + uy*uy)));
           feq_3 = w[3] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*ux + 4.5*ux*ux + 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
 
           rho = macro_LB[id_5][0], ux = macro_LB[id_5][1] / rho, uy = macro_LB[id_5][2] / rho;
-          // feq_5 = w[5] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) + 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
           feq_8 = w[8] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) - 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_LB[id_6][0], ux = macro_LB[id_6][1] / rho, uy = macro_LB[id_6][2] / rho;
-          // feq_6 = w[6] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux - uy) - 4.5*(ux - uy)*(ux - uy) - 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) + 9 * (ux*ux + uy*uy)));
           feq_7 = w[7] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) + 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_7][0], ux = macro_NS[id_7][1] / rho, uy = macro_NS[id_7][2] / rho;
-          // feq_7 = w[7] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) + 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
           feq_6 = w[6] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) - 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_8][0], ux = macro_NS[id_8][1] / rho, uy = macro_NS[id_8][2] / rho;
-          //feq_8 = w[8] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux + uy) - 4.5*(ux + uy)*(ux + uy) - 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) + 9 * (ux*ux + uy*uy)));
           feq_5 = w[5] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) + 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
 
 
@@ -90,7 +82,7 @@ for(i=1; i<=xMax_LB; i++)
           Pyy_eq_t0 = feq_1 + feq_2 + feq_5 + feq_6 + feq_7 + feq_8;
 
          /*
-          *  COMPUTATION OF MACRO at current time step
+          *  Computation of macro at current time step
           */
 
           rho         = macro_NS[id_fd][0];
@@ -104,13 +96,14 @@ for(i=1; i<=xMax_LB; i++)
           Pxy_eq_t1 = rho * u * v;
           Pyy_eq_t1 = rho * (1./3. + (v * v));
 
-          //  P reconstructed from Peq at two different time steps. Emmanuel's formula.
+          // P reconstructed from Peq at two different time steps. Emmanuel's formula. 
+          // So far, it does not respect the solvability condition
           Pxx = Pxx_eq_t1 - tau_g * (Pxx_eq_t1 - Pxx_eq_t0);
           Pxy = Pxy_eq_t1 - tau_g * (Pxy_eq_t1 - Pxy_eq_t0);
           Pyy = Pyy_eq_t1 - tau_g * (Pyy_eq_t1 - Pyy_eq_t0);
           /*/
 
-          //   P recosntructed form Peq only. 
+          //   P recosntructed from Peq only. 
           Pxx = Pxx_eq_t1;
           Pxy = Pxy_eq_t1;
           Pyy = Pyy_eq_t1;
@@ -139,35 +132,27 @@ for(i=1; i<=xMax_LB; i++)
 
 
           rho = macro_NS[id_1][0], ux = macro_NS[id_1][1] / rho, uy = macro_NS[id_1][2] / rho;
-          // feq_1 = w[1] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*uy + 4.5*uy*uy + 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
           feq_2 = w[2] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*uy + 4.5*uy*uy - 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
 
           rho = macro_LB[id_2][0], ux = macro_LB[id_2][1] / rho, uy = macro_LB[id_2][2] / rho;
-          // feq_2 = w[2] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*uy + 4.5*uy*uy - 0.5*uy*(-9 * uy*uy + 9 * (ux*ux + uy*uy)));
           feq_1 = w[1] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*uy + 4.5*uy*uy + 0.5*uy*(9 * uy*uy - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_3][0], ux = macro_NS[id_3][1]/rho, uy = macro_NS[id_3][2]/rho;
-          // feq_3 = w[3] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*ux + 4.5*ux*ux + 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
           feq_4 = w[4] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*ux + 4.5*ux*ux - 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_4][0], ux = macro_NS[id_4][1]/rho, uy = macro_NS[id_4][2]/rho;
-          // feq_4 = w[4] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*ux + 4.5*ux*ux - 0.5*ux*(-9 * ux*ux + 9 * (ux*ux + uy*uy)));
           feq_3 = w[3] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*ux + 4.5*ux*ux + 0.5*ux*(9 * ux*ux - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_5][0], ux = macro_NS[id_5][1] / rho, uy = macro_NS[id_5][2] / rho;
-          // feq_5 = w[5] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) + 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
           feq_8 = w[8] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) - 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_NS[id_6][0], ux = macro_NS[id_6][1] / rho, uy = macro_NS[id_6][2] / rho;
-          // feq_6 = w[6] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux - uy) - 4.5*(ux - uy)*(ux - uy) - 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) + 9 * (ux*ux + uy*uy)));
           feq_7 = w[7] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) + 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_LB[id_7][0], ux = macro_LB[id_7][1] / rho, uy = macro_LB[id_7][2] / rho;
-          // feq_7 = w[7] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) + 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
           feq_6 = w[6] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux - uy) + 4.5*(ux - uy)*(ux - uy) - 0.5*(ux - uy)*(9 * (ux - uy)*(ux - uy) - 9 * (ux*ux + uy*uy)));
 
           rho = macro_LB[id_8][0], ux = macro_LB[id_8][1] / rho, uy = macro_LB[id_8][2] / rho;
-          //feq_8 = w[8] * rho*(1.0 - 1.5*(ux*ux + uy*uy) - 3.0*(ux + uy) - 4.5*(ux + uy)*(ux + uy) - 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) + 9 * (ux*ux + uy*uy)));
           feq_5 = w[5] * rho*(1.0 - 1.5*(ux*ux + uy*uy) + 3.0*(ux + uy) + 4.5*(ux + uy)*(ux + uy) + 0.5*(ux + uy)*(9 * (ux + uy)*(ux + uy) - 9 * (ux*ux + uy*uy)));
 
 
@@ -187,13 +172,14 @@ for(i=1; i<=xMax_LB; i++)
           Pxy_eq_t1 = rho * u * v;
           Pyy_eq_t1 = rho * (1./3. + (v * v));
 
-          //   P reconstructed from Peq at two different time steps. Emmanuel's formula.
+          // P reconstructed from Peq at two different time steps. Emmanuel's formula.
+          // So far, it does not respect the solvability condition
           Pxx = Pxx_eq_t1 - tau_g * (Pxx_eq_t1 - Pxx_eq_t0);
           Pxy = Pxy_eq_t1 - tau_g * (Pxy_eq_t1 - Pxy_eq_t0);
           Pyy = Pyy_eq_t1 - tau_g * (Pyy_eq_t1 - Pyy_eq_t0);
           /*/
 
-          //   P recosntructed form Peq only. 
+          //   P recosntructed from Peq only. 
           Pxx = Pxx_eq_t1;
           Pxy = Pxy_eq_t1;
           Pyy = Pyy_eq_t1;

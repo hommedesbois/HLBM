@@ -276,7 +276,7 @@ const int ny[4] = {0,  0, 1, -1};
 double coef_m1, coef, coef_p1, coef_p2;
 double rho_u_surf[3][4];
 double rho_u_u_surf[5][4];
-double sigma_surf[5][4];
+double deviatoric_stress_surf[5][4];
 
 double u[3];
 
@@ -357,12 +357,12 @@ for(i=1; i<=xMax_NS; i++)
                 e = (c-1)*2 + d;
                 k=e+2;
                 rho_u_u_surf[e][b] = coef_m1 * u[c] * Macro[id_m1][(d)] + coef * u[c] * Macro[id][d] + coef_p1 * u[c] * Macro[id_p1][d] + coef_p2 * u[c] * Macro[id_p2][d];
-                sigma_surf[e][b] = 0.5 * Macro[id][k] + 0.5 * Macro[id_p1][k];
+                deviatoric_stress_surf[e][b] = 0.5 * Macro[id][k] + 0.5 * Macro[id_p1][k];
                 }
             }
             rho_u += 0.5 * nx[b]* (rho_u_surf[1][b] + flux[id_flux][0][b]) + 0.5 * ny[b]*(rho_u_surf[2][b] + flux[id_flux][1][b]);
-            P_x += 0.5 * nx[b] * ((rho_u_u_surf[1][b] + sigma_surf[1][b]) + flux[id_flux][2][b]) + 0.5 * ny[b]*((rho_u_u_surf[2][b]+ sigma_surf[2][b]) + flux[id_flux][3][b]);
-            P_y += 0.5 * nx[b] * ((rho_u_u_surf[3][b] + sigma_surf[3][b]) + flux[id_flux][4][b]) + 0.5 * ny[b]*((rho_u_u_surf[4][b]+ sigma_surf[4][b]) + flux[id_flux][5][b]);
+            P_x += 0.5 * nx[b] * ((rho_u_u_surf[1][b] + deviatoric_stress_surf[1][b]) + flux[id_flux][2][b]) + 0.5 * ny[b]*((rho_u_u_surf[2][b]+ deviatoric_stress_surf[2][b]) + flux[id_flux][3][b]);
+            P_y += 0.5 * nx[b] * ((rho_u_u_surf[3][b] + deviatoric_stress_surf[3][b]) + flux[id_flux][4][b]) + 0.5 * ny[b]*((rho_u_u_surf[4][b]+ deviatoric_stress_surf[4][b]) + flux[id_flux][5][b]);
             }
 
     Macro[id_new][0] = Macro[id][0] - Dt * rho_u;
@@ -670,11 +670,11 @@ for(i=1; i<=xMax_NS; i++)
             coef    = 0.5;
             coef_p1 = 0.5;
 
-            if(j==1 && b==3)
-            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), yMax_NS)][k]; // Surf[0][i][k]; --> change back if periodicity removed
-            else if(j==yMax_NS && b==2)
-            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), 1)][k];       // Surf[1][i][k]; 
-            else
+            //if(j==1 && b==3)
+            //Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), yMax_NS)][k]; // Surf[0][i][k]; --> change back if periodicity removed
+            //else if(j==yMax_NS && b==2)
+            //Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][IDM_NS((i + nx[b]), 1)][k];       // Surf[1][i][k]; 
+            //else
             Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][id_p1][k];
             }
 
@@ -767,6 +767,240 @@ for(i=1; i<=xMax_NS; i++)
     Macro[id_new][RHO] =   1./3. * Macro[id_old][RHO]   + 2./3.*RK[2][id_rk][0] + 2./3.*Dt*QRK[2][id_rk][0] - Dt * s[id_s]* (Macro[id_old][RHO]-rho0);
     Macro[id_new][RHOUX] = 1./3. * Macro[id_old][RHOUX] + 2./3.*RK[2][id_rk][1] + 2./3.*Dt*QRK[2][id_rk][1] - Dt * s[id_s]* (Macro[id_old][RHOUX]-rho0*U0/(sqrt(3)*Csound));
     Macro[id_new][RHOUY] = 1./3. * Macro[id_old][RHOUY] + 2./3.*RK[2][id_rk][2] + 2./3.*Dt*QRK[2][id_rk][2] - Dt * s[id_s]* (Macro[id_old][RHOUY]-rho0*V0/(sqrt(3)*Csound));
+
+    }
+}
+
+void FiniteVolRK2_1(double **Macro, double ***RK, double ***QRK, double ***Surf){
+int i, j, k, b;
+int id, id_rk, id_p1, id_m1, id_p2;
+int off;
+/*
+ *  Surface normals */
+/*                 E   W  N   S
+                   |   |  |   |            */
+const int nx[4] = {1, -1, 0,  0};
+const int ny[4] = {0,  0, 1, -1};
+
+double coef, coef_p1, coef_p2, coef_m1;
+double Macro_Surf[6][4];
+double u[2];
+
+off = current_slot * xMaxp_NS * yMaxp_NS;
+
+for(i=1; i<=xMax_NS; i++)
+    for(j=1; j<=yMax_NS; j++){
+
+    double sum_rho_u = 0.0, sum_Px = 0.0, sum_Py = 0.0;
+
+    id = off + IDM_NS(i,j);
+    id_rk = IDM_NS(i,j);
+
+    for(b=0; b<4; b++){
+
+        int i2 = i + 2*nx[b];
+        int j2 = j + 2*ny[b];
+
+        if(j2 < 0)
+            j2 = yMax_NS-1;
+
+        if(j2 > (yMax_NS+1))
+            j2 = 2;
+
+        if(i2 < 0)
+            i2 = xMax_NS-1;
+
+        if(i2 > (xMax_NS+1))
+            i2 = 2;
+
+        id_m1 = off + IDM_NS((i - nx[b]), (j - ny[b]));
+        id_p2 = off + IDM_NS(i2, j2);
+
+        id_p1 = off + IDM_NS((i + nx[b]), (j + ny[b]));
+
+        coef    = 0.5;
+        coef_p1 = 0.5;
+
+        if(QUICK){
+            // velocity at the interface
+            u[0] = 0.5 * (Macro[id][1]/Macro[id][0] + Macro[id_p1][1]/Macro[id_p1][0]); 
+            u[1] = 0.5 * (Macro[id][2]/Macro[id][0] + Macro[id_p1][2]/Macro[id_p1][0]); 
+
+            double u_dot_n = u[0] * nx[b] + u[1] * ny[b];
+
+            if(u_dot_n > 0.0){
+        
+                coef_m1 = -1./8.;
+                coef    =  6./8.;
+                coef_p1 =  3./8.;
+                coef_p2 =  0.0;
+            }
+            else if(u_dot_n < 0.0){
+
+                coef_m1 =  0.0;
+                coef    =  3./8.;
+                coef_p1 =  6./8.;
+                coef_p2 = -1./8.;
+            }
+        
+            Macro_Surf[0][b] = coef_m1 * u[0] * Macro[id_m1][RHO] + coef * u[0] * Macro[id][RHO] + coef_p1 * u[0] * Macro[id_p1][RHO] + coef_p2 * u[0] * Macro[id_p2][RHO];
+            Macro_Surf[1][b] = coef_m1 * u[1] * Macro[id_m1][RHO] + coef * u[1] * Macro[id][RHO] + coef_p1 * u[1] * Macro[id_p1][RHO] + coef_p2 * u[1] * Macro[id_p2][RHO];
+        }else{
+            Macro_Surf[0][b] = coef * Macro[id][RHOUX] + coef_p1 * Macro[id_p1][RHOUX];
+            Macro_Surf[1][b] = coef * Macro[id][RHOUY] + coef_p1 * Macro[id_p1][RHOUY];
+        }   
+		/*
+		***** rechange if periodicity removed ***
+            if(j==1 && b==3)
+            Macro_Surf[(k-1)][b] = Surf[0][i][k];
+            else if(j==yMax_NS && b==2)
+            Macro_Surf[(k-1)][b] = Surf[1][i][k];
+            else
+            	*/
+	    for(k=PXX; k<=PYY; k++)
+            Macro_Surf[(k-1)][b] = coef * Macro[id][k] + coef_p1 * Macro[id_p1][k]; // Interpolation of marco on surface
+
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b]; // slope
+        sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
+        sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
+        }
+
+    QRK[0][id_rk][0] = -sum_rho_u;
+    QRK[0][id_rk][1] = -sum_Px;
+    QRK[0][id_rk][2] = -sum_Py;
+
+    /*
+    RK[0] = Macro
+    RK[0] = Macro
+    RK[0] = Macro
+    */
+
+    RK[1][id_rk][0] = Macro[id][RHO] + Dt * QRK[0][id_rk][0];
+    RK[1][id_rk][1] = Macro[id][RHOUX] + Dt * QRK[0][id_rk][1];
+    RK[1][id_rk][2] = Macro[id][RHOUY] + Dt * QRK[0][id_rk][2];
+    }
+}
+
+
+void FiniteVolRK2_2(double **Macro, double ***RK, double ***QRK, double ***Surf, double *s){
+
+int i, j, k, b;
+int id_rk, id_p1, id_m1, id_p2, id_s, id_old, id_new;
+int off0, off1;
+/*
+ *  Surface normals */
+/*                 E   W  N   S
+                   |   |  |   |            */
+const int nx[4] = {1, -1, 0,  0};
+const int ny[4] = {0,  0, 1, -1};
+
+double coef, coef_p1, coef_p2, coef_m1;
+double Macro_Surf[6][4];
+double u[2];
+
+off0 = current_slot * xMaxp_NS * yMaxp_NS;
+off1 = other_slot * xMaxp_NS * yMaxp_NS;
+
+
+for(i=1; i<=xMax_NS; i++)
+    for(j=1; j<=yMax_NS; j++){
+
+    double sum_rho_u = 0.0, sum_Px = 0.0, sum_Py = 0.0;
+
+    id_rk = IDM_NS(i,j);
+    id_old = off0 + IDM_NS(i,j);
+    id_new = off1 + IDM_NS(i,j);
+    id_s = (j-1)*xMax_NS + (i-1);
+
+    for(b=0; b<4; b++){
+
+        int i2 = i + 2*nx[b];
+        int j2 = j + 2*ny[b];
+
+        if(j2 < 0)
+            j2 = yMax_NS-1;
+
+        if(j2 > (yMax_NS+1))
+            j2 = 2;
+
+        if(i2 < 0)
+            i2 = xMax_NS-1;
+
+        if(i2 > (xMax_NS+1))
+            i2 = 2;
+
+        id_m1 = IDM_NS((i - nx[b]), (j - ny[b]));
+        id_p2 = IDM_NS(i2, j2);
+        id_p1 = IDM_NS((i + nx[b]), (j + ny[b]));
+
+        coef    = 0.5;
+        coef_p1 = 0.5;
+
+        if(QUICK){
+            // velocity at the interface
+            u[0] = 0.5 * (RK[1][id_rk][RHOUX]/RK[1][id_rk][RHO] + RK[1][id_p1][RHOUX]/RK[1][id_p1][RHO]); 
+            u[1] = 0.5 * (RK[1][id_rk][RHOUY]/RK[1][id_rk][RHO] + RK[1][id_p1][RHOUY]/RK[1][id_p1][RHO]);  
+
+            double u_dot_n = u[0] * nx[b] + u[1] * ny[b];
+
+            if(u_dot_n > 0.0){
+        
+                coef_m1 = -1./8.;
+                coef    =  6./8.;
+                coef_p1 =  3./8.;
+                coef_p2 =  0.0;
+            }
+            else if(u_dot_n < 0.0){
+
+                coef_m1 =  0.0;
+                coef    =  3./8.;
+                coef_p1 =  6./8.;
+                coef_p2 = -1./8.;
+            }
+        
+            Macro_Surf[0][b] = coef_m1 * u[0] * RK[1][id_m1][RHO] + coef * u[0] * RK[1][id_rk][RHO] + coef_p1 * u[0] * RK[1][id_p1][RHO] + coef_p2 * u[0] * RK[1][id_p2][RHO];
+            Macro_Surf[1][b] = coef_m1 * u[1] * RK[1][id_m1][RHO] + coef * u[1] * RK[1][id_rk][RHO] + coef_p1 * u[1] * RK[1][id_p1][RHO] + coef_p2 * u[1] * RK[1][id_p2][RHO];
+        }else{
+            Macro_Surf[0][b] = coef * RK[1][id_rk][RHOUX] + coef_p1 * RK[1][id_p1][RHOUX];
+            Macro_Surf[1][b] = coef * RK[1][id_rk][RHOUY] + coef_p1 * RK[1][id_p1][RHOUY];
+        }   
+		/*
+		***** rechange if periodicity removed ***
+            if(j==1 && b==3)
+            Macro_Surf[(k-1)][b] = Surf[0][i][k];
+            else if(j==yMax_NS && b==2)
+            Macro_Surf[(k-1)][b] = Surf[1][i][k];
+            else
+            	*/
+	    for(k=PXX; k<=PYY; k++)
+            Macro_Surf[(k-1)][b] = coef * RK[1][id_rk][k] + coef_p1 * RK[1][id_p1][k]; // Interpolation of marco on surface
+
+
+
+        sum_rho_u += nx[b]*Macro_Surf[0][b] + ny[b]*Macro_Surf[1][b];
+        sum_Px    += nx[b]*Macro_Surf[2][b] + ny[b]*Macro_Surf[3][b];
+        sum_Py    += nx[b]*Macro_Surf[4][b] + ny[b]*Macro_Surf[5][b];
+        }
+
+    QRK[1][id_rk][0] = -sum_rho_u;
+    QRK[1][id_rk][1] = -sum_Px;
+    QRK[1][id_rk][2] = -sum_Py;
+
+    /*
+    RK[0] = Macro
+    RK[0] = Macro
+    RK[0] = Macro
+    */
+//    if(j>xMax_NS){
+//    Macro[id_new][0] = Macro[id_old][0] - Dt/6. * (QRK[0][id_rk][0] + 2*QRK[1][id_rk][0] + 2*QRK[2][id_rk][0] + QRK[3][id_rk][0]);
+//    Macro[id_new][1] = Macro[id_old][1] - Dt/6. * (QRK[0][id_rk][1] + 2*QRK[1][id_rk][1] + 2*QRK[2][id_rk][1] + QRK[3][id_rk][1]);
+//    Macro[id_new][2] = Macro[id_old][2] - Dt/6. * (QRK[0][id_rk][2] + 2*QRK[1][id_rk][2] + 2*QRK[2][id_rk][2] + QRK[3][id_rk][2]);
+
+    s[id_s] = 0.0; // sponge zones deactivated
+
+    Macro[id_new][RHO] =   .5 * Macro[id_old][RHO]   + .5 *RK[1][id_rk][0] + .5*Dt*QRK[1][id_rk][0] - Dt * s[id_s]* (Macro[id_old][RHO]-rho0);
+    Macro[id_new][RHOUX] = .5 * Macro[id_old][RHOUX] + .5 *RK[1][id_rk][1] + .5*Dt*QRK[1][id_rk][1] - Dt * s[id_s]* (Macro[id_old][RHOUX]-rho0*U0/(sqrt(3)*Csound));
+    Macro[id_new][RHOUY] = .5 * Macro[id_old][RHOUY] + .5 *RK[1][id_rk][2] + .5*Dt*QRK[1][id_rk][2] - Dt * s[id_s]* (Macro[id_old][RHOUY]-rho0*V0/(sqrt(3)*Csound));
 
     }
 }

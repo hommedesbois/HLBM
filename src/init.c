@@ -17,7 +17,7 @@ void InitializeFluidNS(double **macro, int testcase){
     double Esc;
 
     double r0;
-    double Rc = 15 * DX;
+    double Rc = 10 * DX;
 
     double Xc = (double)(xMax_NS/2.)*DX;
     double Yc = (double)(yMax_NS*pos)*DX;
@@ -52,7 +52,8 @@ void InitializeFluidNS(double **macro, int testcase){
         rho = (P0/(Csound*Csound));
 
         a0 = 0.01;
-        r0 = 7*DX; // shear layer width
+        r0 = 2.5*DX; // shear layer width
+        
         ux = U0*tanh((ypos-Length/4.)/r0)*tanh((3.*Length/4.-ypos)/r0);
 		uy = U0*a0*sin(2.*M_PI*(xpos/Length  + 0.25));
 
@@ -140,7 +141,7 @@ void InitializeFluidLB(double *cell, double **macro, int testcase){
     double Esc;
 
     double r0;
-    double Rc = 15 * DX;
+    double Rc = 10 * DX;
 
     double Xc = (double)(xMax_NS/2.)*DX;
     double Yc = (double)(yMax_NS*pos)*DX;
@@ -170,7 +171,7 @@ switch(testcase){
                 /*
                  ****** SHEAR LAYER *****
                  */
-        r0 = 7*DX;
+        r0 = 2.5*DX;
         rho = (P0/(Csound*Csound));
         a0 = 0.01;
 
@@ -255,8 +256,8 @@ switch(testcase){
 
                     fneq = - w[l]*rho*tau_g*3.0*((ex[l]*ex[l]-Cs2)*duxdx + (ey[l]*ey[l]-Cs2)*duydy + ex[l]*ey[l]*(duxdy + duydx));
 
-			//cell[idx] = feq + fneq;
-			cell[idx] = feq;
+			cell[idx] = feq + fneq;
+			// cell[idx] = feq;
         }
     }
 }

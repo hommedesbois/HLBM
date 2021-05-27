@@ -101,6 +101,9 @@ void FiniteVol(double **);
 void Flux(double **, double ***, int);
 void FiniteVolHeun(double **, double ***);
 
+void FiniteVolRK2_1(double **, double ***, double ***, double ***);
+void FiniteVolRK2_2(double **, double ***, double ***, double ***, double *);
+
 void FiniteVolRK3_1(double **, double ***, double ***, double ***);
 void FiniteVolRK3_2(double **, double ***, double ***, double ***);
 void FiniteVolRK3_3(double **, double ***, double ***, double ***, double *);
@@ -129,8 +132,8 @@ void ComputeFcol_BC(double *);
 void ComputeMacro_BC(double **);
 void ComputeMacroLB_BC(double **);
 void ComputeMacroP_BC(double **);
-void GuardRK4(double ***, int);
-void GuardRK4P(double ***, int);
+void GuardRK(double ***, int);
+void GuardRKP(double ***, int);
 
 
 void Closure(double **);
@@ -172,7 +175,7 @@ int main (int argc, const char * argv[]){
   Pref = (Csound*Csound)/1.4;
   P0 = Csound * Csound;
 
-	DX = 0.0025;
+	DX = 0.01;
 	Dt = 1.;
 
   double *sigma = (double *) malloc (xMax_NS*yMax_NS*sizeof(double));
@@ -291,27 +294,27 @@ int main (int argc, const char * argv[]){
          */
 
         FiniteVolRK4_1(macro_NS, RK, QRK, macro_Surf_Int);
-        GuardRK4(RK, 1); // treament periodic boundaries rho, u
+        GuardRK(RK, 1); // treament periodic boundaries rho, u
         ClosureRK4(RK, 1); // Computation of S_ij with updated velocities
-        GuardRK4P(RK, 1); // treament periodic boundaries P
+        GuardRKP(RK, 1); // treament periodic boundaries P
 
         /*
          * STEP 2
          */
 
         FiniteVolRK4_23(macro_NS, RK, QRK, macro_Surf_Int, 2);
-        GuardRK4(RK, 2);
+        GuardRK(RK, 2);
         ClosureRK4(RK, 2);
-        GuardRK4P(RK, 2);
+        GuardRKP(RK, 2);
 
         /*
          * STEP 3
          */
 
         FiniteVolRK4_23(macro_NS, RK, QRK, macro_Surf_Int, 3);
-        GuardRK4(RK, 3);
+        GuardRK(RK, 3);
         ClosureRK4(RK, 3);
-        GuardRK4P(RK, 3);
+        GuardRKP(RK, 3);
 
         /*
          * STEP 4
@@ -330,18 +333,18 @@ int main (int argc, const char * argv[]){
          */
 
         FiniteVolRK3_1(macro_NS, RK, QRK, macro_Surf_Int);
-        GuardRK4(RK, 1); // treament periodic boundaries rho, u
+        GuardRK(RK, 1); // treament periodic boundaries rho, u
         ClosureRK4(RK, 1); // Computation of S_ij with updated velocities
-        GuardRK4P(RK, 1); // treament periodic boundaries P
+        GuardRKP(RK, 1); // treament periodic boundaries P
 
         /*
          * STEP 2
          */
 
         FiniteVolRK3_2(macro_NS, RK, QRK, macro_Surf_Int);
-        GuardRK4(RK, 2);
+        GuardRK(RK, 2);
         ClosureRK4(RK, 2);
-        GuardRK4P(RK, 2);
+        GuardRKP(RK, 2);
 
         /*
          * STEP 3
@@ -353,7 +356,28 @@ int main (int argc, const char * argv[]){
         ComputeMacroP_BC(macro_NS);
       break;
 
-      case 2: // Two-step Runge-Kutta for FV-NS
+      case 2: // Two-stage Runge Kutta scheme for FV-NS
+
+        /*
+         * STEP 1
+         */
+
+        FiniteVolRK2_1(macro_NS, RK, QRK, macro_Surf_Int);
+        GuardRK(RK, 1); // treament periodic boundaries rho, u
+        ClosureRK4(RK, 1); // Computation of S_ij with updated velocities
+        GuardRKP(RK, 1); // treament periodic boundaries P
+
+        /*
+         * STEP 2
+         */
+
+        FiniteVolRK2_2(macro_NS, RK, QRK, macro_Surf_Int, sigma);
+        ComputeMacro_BC(macro_NS);
+        Closure(macro_NS);
+        ComputeMacroP_BC(macro_NS);
+      break;
+
+      case 3: // Heun Predictor Corrector
 
         /*
          * STEP 1
@@ -387,7 +411,7 @@ int main (int argc, const char * argv[]){
     ComputeMacroFromF(fcol, macro_NS, macro_LB); // Transfer NS -> LBM taken into account here
     ComputeMacroLB_BC(macro_LB);
     ComputeGrad(macro_LB, macro_NS, grad_LB);
-    FilterX7_LB(macro_LB, current_slot); FilterY7_LB(macro_LB, current_slot); // Filter LBM solution
+    //FilterX7_LB(macro_LB, current_slot); FilterY7_LB(macro_LB, current_slot); // Filter LBM solution
     //ComputeFcolFromCentMomCollision(fcol, macro_LB);
     HRRCollision(fcol, macro_LB, grad_LB);
     ComputeFcol_BC(fcol);

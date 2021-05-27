@@ -5,15 +5,24 @@
  *  Copyright 2016 CNRS. All rights reserved.
  *
  */
-#define NSTEPS 3601 // results in a single domain passage
-#define period 200
-// filter coefficient
-#define alpha 0.0
-// Time-marching scheme:  0 -> Runge-Kutta 4; 1 -> Runge-Kutta 3; 2 -> Runge-Kutta 2
-#define time_marching 1
-// coefficient for hybrid recursive regularization 
-#define sigma_hrr 0.98
-#define sigma_corr 0.0
+#define NSTEPS 1001
+#define period 100
+
+#define alpha 0.2 // filter coefficient
+
+/* 
+ * Time-marching schemes
+ * 0 -> 4 stage Runge-Kutta
+ * 1 -> 3 stage Runge-Kutta
+ * 2 -> 2 stage Runge-Kutta
+ * 3 -> Heun (2 stage RK)
+ */
+
+#define time_marching 0
+#define QUICK 0 // QUICK or central difference
+
+#define sigma_hrr 0.98 // coefficient for hybrid recursive regularization 
+#define sigma_corr 0.0 // Mach number correction. Leave 0 for now.
 
 
 enum {E = 0, W, N, S};
@@ -41,15 +50,15 @@ enum {UX3X = UNEXT , UY3Y};
  */
 
  // NS
-#define xMax_NS 400
-#define yMax_NS 400
+#define xMax_NS 100
+#define yMax_NS 100
 
 #define xMaxp_NS (xMax_NS + 2) // padded dimensions for periodic BC
 #define yMaxp_NS (yMax_NS + 2)
 
 // LB
-#define xMax_LB 400
-#define yMax_LB 200
+#define xMax_LB 100
+#define yMax_LB 50
 
 #define xMaxp_LB (xMax_LB + 2) // padded dimensions for periodic BC and transition overlay
 #define yMaxp_LB (yMax_LB + 2)
@@ -64,8 +73,8 @@ enum {UX3X = UNEXT , UY3Y};
 #define NX_LB (xMax_LB + 1)
 #define NY_LB (yMax_LB + 1)
 
-// vertical displacement between NS and LB
-#define shift 50
+
+#define shift 25 // vertical displacement between NS and LB
 
 #define i_c (i+1)/2   // shifted by 1
 #define i_f i*2-1   // shifted by 1

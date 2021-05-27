@@ -97,10 +97,8 @@ void HRRCollision(double *cell, double **macro, double **grad, double **corr){
             u = rho_u/rho;
             v = rho_v/rho;
 
-            //Sxx = grad[id_m][UXX] - 0.5 * (grad[id_m][UXX] + grad[id_m][UYY]);
-            //Syy = grad[id_m][UYY] - 0.5 * (grad[id_m][UXX] + grad[id_m][UYY]);
-            Sxx = grad[id_m][UXX] ;
-            Syy = grad[id_m][UYY] ;
+            Sxx = grad[id_m][UXX] - 0.5 * (grad[id_m][UXX] + grad[id_m][UYY]);
+            Syy = grad[id_m][UYY] - 0.5 * (grad[id_m][UXX] + grad[id_m][UYY]);
             Sxy = 0.5 * (grad[id_m][UXY] + grad[id_m][UYX]);
 
             Pxx_eq = rho * (1./3. + (u * u));
